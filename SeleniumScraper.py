@@ -1,9 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-class javascript_rendered_browser:
+class SeleniumScraper:
 
-    def get_driver(self):
+    def __init__(self):
         DRIVER_PATH = 'C:\chromedriver\chromedriver.exe'
 
         # ChromeOptions = webdriver.ChromeOptions()
@@ -15,5 +15,4 @@ class javascript_rendered_browser:
         options.add_argument("--window-size=1920,1200")
         # chrome_options = ChromeOptions
 
-        driver = webdriver.Chrome(options=options, executable_path=DRIVER_PATH)
-        return driver
+        self.driver = webdriver.Chrome(options=options, executable_path=DRIVER_PATH)
