@@ -15,53 +15,48 @@ class HomeDepotScraper:
             EC.presence_of_element_located((By.ID, "headerSearch"))
         )
 
-    def get_by_model_number(self, model_numbers):
+    def get_by_internet_number(self, model_numbers):
         results = {}
         for model_num in model_numbers:
             # Enter search item
             search_box = self.driver.find_element_by_class_name("SearchBox__input")
             search_box.clear()
-            # model_search = ""
-            # for model_num in model_numbers:
-            #     if " " in model_num:
-            #         continue
-            #     model_search += model_num + "|"
-            # model_search = model_search.strip("|")
             search_box.send_keys(model_num)
             # Click Search Button
             search_button = self.driver.find_element_by_class_name("SearchBox__button")
             search_button.click()
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "price-format__main-price"))
-            )
-            # Get all model numbers on page
-            model_number_elements = self.driver.find_elements_by_class_name("product-identifier__model")
-            for model_num in model_numbers:
-                for num in model_number_elements:
-                    # print(num.text.replace("Model# ", ""))
-                    if num.text.replace("Model# ", "") == model_num:
-                        price = self.get_price(num)
-                        results[model_num] = {"price": price}
-                        break
-            # for model_num in model_numbers:
-            #     if model_num not in results.keys():
-            #         results.update(self.get_price_by_model_number([model_num]))
+            try:
+                WebDriverWait(self.driver, 15).until(
+                    EC.presence_of_element_located((By.XPATH, "//span[@class='price-detailed__unit-price']/span"))
+                )
+            except:
+                WebDriverWait(self.driver, 15).until(
+                    EC.presence_of_element_located((By.XPATH, "//span[@class='price-format__main-price']/span[2]"))
+                )
+                num = self.driver.find_element_by_class_name("price-format__main-price")
+                price = self.get_price(num)
+                results[model_num] = {"price": price}
+                continue
+            num = self.driver.find_element_by_class_name("price-detailed__unit-price")
+            price = num.find_element_by_xpath("./span")
+            results[model_num] = {"price": price.text.strip('$')}
+            unit = num.find_element_by_xpath("./following-sibling::span")
+            results[model_num].update({"unit": unit.text})
+
         return results
 
     def get_price(self, num):
-        try:
-            dollars = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[2]")
-            cents = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[3]")
-        except:
-            dollars = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/div/span[2]")
-            cents = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/div/span[3]")
+        # dollars = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[2]")
+        # cents = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[3]")
+        dollars = num.find_element_by_xpath("./span[2]")
+        cents = num.find_element_by_xpath("./span[3]")
         return dollars.text + "." + cents.text
 
     def quit_driver(self):
         self.driver.quit()
 
 # scraper_test = HomeDepotScraper()
-# print(scraper_test.get_by_model_number(['LF000885', 'N2316', '740J 15 SMT CP K4']))
+# print(scraper_test.get_by_internet_number(['301015010']))
 # # print(scraper_test.get_price_by_model_number('N2316'))
 # # print(scraper_test.get_price_by_model_number('740J 15 SMT CP K4'))
 # scraper_test.quit_driver()
