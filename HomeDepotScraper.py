@@ -25,23 +25,39 @@ class HomeDepotScraper:
             # Click Search Button
             search_button = self.driver.find_element_by_class_name("SearchBox__button")
             search_button.click()
+            wait = WebDriverWait(self.driver, 15)
             try:
-                WebDriverWait(self.driver, 15).until(
-                    EC.presence_of_element_located((By.XPATH, "//span[@class='price-detailed__unit-price']/span"))
-                )
+                wait.until(
+                    EC.text_to_be_present_in_element(By.XPATH, "//*[@class='price-detailed__unit-price']/span"))
             except:
-                WebDriverWait(self.driver, 15).until(
-                    EC.presence_of_element_located((By.XPATH, "//span[@class='price-format__main-price']/span[2]"))
-                )
-                num = self.driver.find_element_by_class_name("price-format__main-price")
-                price = self.get_price(num)
-                results[model_num] = {"price": price}
-                continue
-            num = self.driver.find_element_by_class_name("price-detailed__unit-price")
-            price = num.find_element_by_xpath("./span")
-            results[model_num] = {"price": price.text.strip('$')}
-            unit = num.find_element_by_xpath("./following-sibling::span")
-            results[model_num].update({"unit": unit.text})
+                wait.until(
+                    EC.text_to_be_present_in_element(By.XPATH, "//*[@class='price-format__main-price']/span[2]"))
+
+            nums = self.driver.find_elements_by_class_name("price-detailed__unit-price")
+            if len(nums) > 0:
+                for value in nums:
+                    price = value.find_element_by_xpath("./span")
+                    if price.text != '':
+                        results[model_num] = {"price": price.text.strip('$')}
+                        break
+
+            else:
+                nums = self.driver.find_elements_by_class_name("price-format__main-price")
+                if len(nums) > 0:
+                    for value in nums:
+                        if value.text != '':
+                            print(value.text)
+                            price = self.get_price(value)
+                            results[model_num] = {"price": price}
+                            break
+
+            units = nums[0].find_elements_by_xpath("./following-sibling::span")
+            if len(units) > 0:
+                for value in units:
+                    if value != '':
+                        results[model_num].update({"unit": value.text})
+            else:
+                results[model_num].update({"unit": ""})
 
         return results
 
@@ -50,7 +66,7 @@ class HomeDepotScraper:
         # cents = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[3]")
         dollars = num.find_element_by_xpath("./span[2]")
         cents = num.find_element_by_xpath("./span[3]")
-        return dollars.text + "." + cents.text
+        return (dollars.text + "." + cents.text).strip('.')
 
     def quit_driver(self):
         self.driver.quit()
