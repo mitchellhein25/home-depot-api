@@ -14,11 +14,17 @@ class TestHomeDepotScraper(TestCase):
     def test_get_by_internet_number_1(self):
         attribute1 = 'price'
         attribute2 = 'unit'
+        attribute3 = 'brand'
+        attribute4 = 'name'
         mod_num = '301015010'
         model_number = [mod_num]
         result = '2.69 /sq. ft.'
+        brand = 'Pergo'
+        name = 'Outlast+ 5.23 in. W Applewood Waterproof Laminate Wood Flooring (13.74 sq. ft./case)'
         resultArray = self.test_scraper.get_by_internet_number(model_number)
         self.assertEqual(result, resultArray[mod_num][attribute1] + ' ' + resultArray[mod_num][attribute2])
+        self.assertEqual(brand, resultArray[mod_num][attribute3])
+        self.assertEqual(name, resultArray[mod_num][attribute4])
 
     def test_get_by_internet_number_2(self):
         attribute1 = 'price'

@@ -14,58 +14,83 @@ class HomeDepotScraper:
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "headerSearch"))
         )
+        self.result = {}
 
     def get_by_internet_number(self, model_numbers):
-        results = {}
         for model_num in model_numbers:
-            # Enter search item
-            search_box = self.driver.find_element_by_class_name("SearchBox__input")
-            search_box.clear()
-            search_box.send_keys(model_num)
-            # Click Search Button
-            search_button = self.driver.find_element_by_class_name("SearchBox__button")
-            search_button.click()
-            wait = WebDriverWait(self.driver, 15)
-            try:
-                wait.until(
-                    EC.text_to_be_present_in_element((By.XPATH, "//*[@class='price-format__main-price']/span[1]"), ""))
-            except:
-                wait.until(
-                    EC.text_to_be_present_in_element((By.XPATH, "//*[@class='price-detailed__unit-price']/span"), ""))
+            self.send_new_search(model_num)
+            self.wait_for_page_load()
+            nums = self.get_price(model_num)
+            self.get_unit(nums, model_num)
+            self.get_brand(model_num)
+            self.get_name(model_num)
+        return self.result
 
-            nums = self.driver.find_elements_by_class_name("price-detailed__unit-price")
+    def send_new_search(self, model_num):
+        # Enter search item
+        search_box = self.driver.find_element_by_class_name("SearchBox__input")
+        search_box.clear()
+        search_box.send_keys(model_num)
+        # Click Search Button
+        search_button = self.driver.find_element_by_class_name("SearchBox__button")
+        search_button.click()
+
+    def wait_for_page_load(self):
+        wait = WebDriverWait(self.driver, 15)
+        try:
+            wait.until(
+                EC.text_to_be_present_in_element((By.XPATH, "//*[@class='price-format__main-price']/span[1]"), ""))
+        except:
+            wait.until(
+                EC.text_to_be_present_in_element((By.XPATH, "//*[@class='price-detailed__unit-price']/span"), ""))
+
+    def get_price(self, model_num):
+        '''Gets the price object, and returns the elements selected when getting those (nums)'''
+        nums = self.driver.find_elements_by_class_name("price-detailed__unit-price")
+        if len(nums) > 0:
+            for value in nums:
+                price = value.find_element_by_xpath("./span")
+                if price.text != '':
+                    self.result[model_num] = {"price": price.text.strip('$')}
+                    break
+
+        else:
+            nums = self.driver.find_elements_by_class_name("price-format__main-price")
             if len(nums) > 0:
                 for value in nums:
-                    price = value.find_element_by_xpath("./span")
-                    if price.text != '':
-                        results[model_num] = {"price": price.text.strip('$')}
+                    if value.text != '':
+                        dollars = value.find_element_by_xpath("./span[2]")
+                        cents = value.find_element_by_xpath("./span[3]")
+                        self.result[model_num] = {"price": (dollars.text + "." + cents.text).strip('.')}
                         break
+        return nums
 
-            else:
-                nums = self.driver.find_elements_by_class_name("price-format__main-price")
-                if len(nums) > 0:
-                    for value in nums:
-                        if value.text != '':
-                            price = self.get_price(value)
-                            results[model_num] = {"price": price}
-                            break
+    def get_unit(self, nums, model_num):
+        units = nums[0].find_elements_by_xpath("./following-sibling::span")
+        if len(units) > 0:
+            for value in units:
+                if value != '':
+                    self.result[model_num].update({"unit": value.text})
+        else:
+            self.result[model_num].update({"unit": ""})
 
-            units = nums[0].find_elements_by_xpath("./following-sibling::span")
-            if len(units) > 0:
-                for value in units:
-                    if value != '':
-                        results[model_num].update({"unit": value.text})
-            else:
-                results[model_num].update({"unit": ""})
+    def get_brand(self, model_num):
+        brand = self.driver.find_elements_by_class_name("product-details__brand--link")
+        if len(brand) > 0:
+            for value in brand:
+                if value != '':
+                    self.result[model_num].update({"brand": value.text})
+        else:
+            self.result[model_num].update({"brand": ""})
 
-        return results
-
-    def get_price(self, num):
-        # dollars = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[2]")
-        # cents = num.find_element_by_xpath("./../../following-sibling::div/div/div/div/div/div/span[3]")
-        dollars = num.find_element_by_xpath("./span[2]")
-        cents = num.find_element_by_xpath("./span[3]")
-        return (dollars.text + "." + cents.text).strip('.')
+    def get_name(self, model_num):
+        name = self.driver.find_elements_by_class_name("product-details__title")
+        if len(name) > 0:
+            for value in name:
+                if value != '':
+                    self.result[model_num].update({"name": value.text})
+        else:
+            self.result[model_num].update({"name": ""})
 
     def quit_driver(self):
         self.driver.quit()
