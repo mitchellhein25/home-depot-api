@@ -35,9 +35,17 @@ class TestHomeDepotScraper(TestCase):
         self.assertEqual(result2, (resultArray[mod_num2][attribute1] + ' ' + resultArray[mod_num2][attribute2]).strip())
         self.assertEqual(result3, (resultArray[mod_num3][attribute1] + ' ' + resultArray[mod_num3][attribute2]).strip())
 
-    def test_get_by_model_number_3(self):
-        attribute = 'price'
-        mod_num = 'HMDR1000WE'
-        model_number = [mod_num]
-        result = '443.46'
-        self.assertEqual(result, self.test_scraper.get_by_model_number(model_number)[mod_num][attribute])
+    def test_get_by_internet_number_3(self):
+        attribute1 = 'price'
+        attribute2 = 'unit'
+        mod_num1 = 'HMDR1000WE'
+        mod_num2 = '302264764'
+        mod_num3 = '315125493'
+        model_numbers = [mod_num1, mod_num2, mod_num3]
+        result1 = '349.00'
+        result2 = '268.00'
+        result3 = '24.98'
+        resultArray = self.test_scraper.get_by_internet_number(model_numbers)
+        self.assertEqual(result1, (resultArray[mod_num1][attribute1] + ' ' + resultArray[mod_num1][attribute2]).strip())
+        self.assertEqual(result2, (resultArray[mod_num2][attribute1] + ' ' + resultArray[mod_num2][attribute2]).strip())
+        self.assertEqual(result3, (resultArray[mod_num3][attribute1] + ' ' + resultArray[mod_num3][attribute2]).strip())

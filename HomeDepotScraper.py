@@ -28,10 +28,10 @@ class HomeDepotScraper:
             wait = WebDriverWait(self.driver, 15)
             try:
                 wait.until(
-                    EC.text_to_be_present_in_element(By.XPATH, "//*[@class='price-detailed__unit-price']/span"))
+                    EC.text_to_be_present_in_element((By.XPATH, "//*[@class='price-format__main-price']/span[1]"), ""))
             except:
                 wait.until(
-                    EC.text_to_be_present_in_element(By.XPATH, "//*[@class='price-format__main-price']/span[2]"))
+                    EC.text_to_be_present_in_element((By.XPATH, "//*[@class='price-detailed__unit-price']/span"), ""))
 
             nums = self.driver.find_elements_by_class_name("price-detailed__unit-price")
             if len(nums) > 0:
@@ -46,7 +46,6 @@ class HomeDepotScraper:
                 if len(nums) > 0:
                     for value in nums:
                         if value.text != '':
-                            print(value.text)
                             price = self.get_price(value)
                             results[model_num] = {"price": price}
                             break
