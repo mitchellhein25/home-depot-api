@@ -24,6 +24,7 @@ class HomeDepotScraper:
             self.get_unit(nums, model_num)
             self.get_brand(model_num)
             self.get_name(model_num)
+            self.get_bullet_points(model_num)
         return self.result
 
     def send_new_search(self, model_num):
@@ -91,6 +92,17 @@ class HomeDepotScraper:
                     self.result[model_num].update({"name": value.text})
         else:
             self.result[model_num].update({"name": ""})
+
+    def get_bullet_points(self, model_num):
+        bullets = self.driver.find_elements_by_class_name("salient-points")
+        if len(bullets) > 0:
+            for value in bullets:
+                if value != '':
+                    remove_more_details = value.text.replace("View More Details", "")
+                    remove_more_details = remove_more_details.replace("\n", ". ")
+                    self.result[model_num].update({"bullet_points": remove_more_details.strip()})
+        else:
+            self.result[model_num].update({"bullet_points": ""})
 
     def quit_driver(self):
         self.driver.quit()
