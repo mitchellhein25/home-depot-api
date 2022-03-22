@@ -1,3 +1,5 @@
+import re
+
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -100,6 +102,7 @@ class HomeDepotScraper:
                 if value != '':
                     remove_more_details = value.text.replace("View More Details", "")
                     remove_more_details = remove_more_details.replace("\n", ". ")
+                    remove_more_details = re.sub("\.\.", ".", remove_more_details)
                     self.result[model_num].update({"bullet_points": remove_more_details.strip()})
         else:
             self.result[model_num].update({"bullet_points": ""})
